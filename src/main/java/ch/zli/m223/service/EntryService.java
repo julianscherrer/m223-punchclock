@@ -1,6 +1,7 @@
 package ch.zli.m223.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -22,5 +23,21 @@ public class EntryService {
 
     public List<Entry> findAll() {
         return entryRepository.listAll();
+    }
+
+    @Transactional
+    public boolean deleteEntry(Long id) {
+        return entryRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Optional<Entry> updateEntry(Long id, Entry entry) {
+        Entry existing = entryRepository.findById(id);
+        if (existing == null) {
+            return Optional.empty();
+        }
+        existing.setCheckIn(entry.getCheckIn());
+        existing.setCheckOut(entry.getCheckOut());
+        return Optional.of(existing);
     }
 }
