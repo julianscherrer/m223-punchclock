@@ -3,6 +3,7 @@ package ch.zli.m223.controller;
 import java.util.List;
 
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -17,7 +18,7 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
-import ch.zli.m223.model.Entry;
+import ch.zli.m223.dto.EntryDto;
 import ch.zli.m223.service.EntryService;
 
 @Path("/entries")
@@ -30,16 +31,16 @@ public class EntryController {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Index all Entries.", description = "Returns a list of all entries.")
-    public List<Entry> index() {
-        return entryService.findAll();
+    public List<EntryDto> index() {
+        return entryService.findAll().stream().map(EntryDto::fromEntity).toList();
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Operation(summary = "Creates a new entry.", description = "Creates a new entry and returns the newly added entry.")
-    public Entry create(Entry entry) {
-       return entryService.createEntry(entry);
+    public EntryDto create(@Valid EntryDto entryDto) {
+        return EntryDto.fromEntity(entryService.createEntry(entryDto.toEntity()));
     }
 
     @DELETE
@@ -57,8 +58,9 @@ public class EntryController {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Operation(summary = "Updates an entry.", description = "Updates checkIn and checkOut of the entry with the given id and returns it. Returns 404 if it does not exist.")
-    public Response update(@PathParam("id") Long id, Entry entry) {
-        return entryService.updateEntry(id, entry)
+    public Response update(@PathParam("id") Long id, @Valid EntryDto entryDto) {
+        return entryService.updateEntry(id, entryDto.toEntity())
+                .map(EntryDto::fromEntity)
                 .map(updated -> Response.ok(updated).build())
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }

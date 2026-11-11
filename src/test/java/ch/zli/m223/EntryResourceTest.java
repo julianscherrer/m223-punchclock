@@ -90,6 +90,45 @@ public class EntryResourceTest {
     }
 
     @Test
+    public void testCreateEntryRequiresCheckInAndCheckOut() {
+        given()
+          .contentType("application/json")
+          .body("{\"checkOut\":\"2026-09-29T17:00:00\"}")
+          .when().post("/entries")
+          .then()
+             .statusCode(400);
+
+        given()
+          .contentType("application/json")
+          .body("{\"checkIn\":\"2026-09-29T08:00:00\"}")
+          .when().post("/entries")
+          .then()
+             .statusCode(400);
+    }
+
+    @Test
+    public void testCheckInMustBeBeforeCheckOut() {
+        given()
+          .contentType("application/json")
+          .body("""
+              {"checkIn":"2026-09-29T17:00:00","checkOut":"2026-09-29T08:00:00"}
+              """)
+          .when().post("/entries")
+          .then()
+             .statusCode(400);
+
+        Long id = createEntry("2026-09-29T08:00:00", "2026-09-29T17:00:00");
+        given()
+          .contentType("application/json")
+          .body("""
+              {"checkIn":"2026-09-30T18:00:00","checkOut":"2026-09-30T09:00:00"}
+              """)
+          .when().put("/entries/" + id)
+          .then()
+             .statusCode(400);
+    }
+
+    @Test
     public void testDeleteEntry() {
         Long id = createEntry("2026-10-01T08:00:00", "2026-10-01T17:00:00");
 
